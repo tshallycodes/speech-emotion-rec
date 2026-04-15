@@ -111,16 +111,3 @@ speech-emotion-recognition/
 │   └── style.css        # Dark theme styling
 └── requirements.txt
 ```
-
-## My Other ML Projects
-
-| Project | Description | Repo |
-|---------|-------------|------|
-| Face Recognition Login | OpenCV LBPH — webcam face authentication | [face-recognition-login](https://github.com/manny2341/face-recognition-login) |
-| Emotion Detection | CNN — real-time webcam emotion recognition | [Emotion-Detection](https://github.com/manny2341/Emotion-Detection) |
-| Fake News Detector | NLP — TF-IDF fake vs real news | [fake-news-detector](https://github.com/manny2341/fake-news-detector) |
-| Crop Disease Detector | EfficientNetV2 — 15 plant diseases | [crop-disease-detector](https://github.com/manny2341/crop-disease-detector) |
-
-## Author
-
-[@manny2341](https://github.com/manny2341)
