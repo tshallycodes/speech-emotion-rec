@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Emotion Recognition</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="header">
+    <div class="header-inner">
+        <div class="logo">🎙️ Speech Emotion Recognition</div>
+        <div class="subtitle">librosa · MFCC Features · MLP Neural Network · RAVDESS Dataset</div>
+    </div>
+</div>
+<div class="container">
+
+    {% if dataset_missing %}
+    <div class="warn-banner">
+        <strong>⚠️ Dataset Required</strong><br>
+        Download the RAVDESS dataset from
+        <a href="https://www.kaggle.com/datasets/uwrfkaggler/ravdess-emotional-speech-audio" target="_blank">Kaggle</a>
+        and place it at <code>~/Documents/RAVDESS/</code> then restart the app.
+    </div>
+    {% else %}
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-val">{{ results.accuracy }}%</div></div>
+        <div class="stat-card"><div class="stat-label">Training Samples</div><div class="stat-val">{{ results.samples }}</div></div>
+        <div class="stat-card"><div class="stat-label">Emotions</div><div class="stat-val">8 classes</div></div>
+        <div class="stat-card"><div class="stat-label">Features</div><div class="stat-val">MFCC + Chroma + Mel</div></div>
+    </div>
+
+    {% if results.emotion_scores %}
+    <div class="card">
+        <h2>Per-Emotion F1 Score</h2>
+        {% for e in results.emotion_scores %}
+        <div class="feat-row">
+            <div class="feat-name">{{ e.emoji }} {{ e.emotion }}</div>
+            <div class="feat-bar-wrap">
+                <div class="feat-bar" style="width: {{ e.f1 }}%"></div>
+            </div>
+            <div class="feat-score">{{ e.f1 }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="card">
+        <h2>Upload Audio to Detect Emotion</h2>
+        <p class="hint">Upload a speech audio file (.wav, .mp3, .ogg). Speak clearly for best results.</p>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('audio-file').click()">
+            <div class="upload-icon">🎵</div>
+            <div class="upload-text">Click to upload audio file</div>
+            <div class="upload-sub">.wav · .mp3 · .ogg</div>
+            <input type="file" id="audio-file" accept=".wav,.mp3,.ogg" style="display:none;" onchange="handleFile(this)">
+        </div>
+        <div id="audio-player" style="display:none; margin-top:16px;">
+            <audio id="audio-element" controls style="width:100%;"></audio>
+        </div>
+        <button id="analyse-btn" style="display:none; margin-top:16px;" onclick="analyseAudio()">Analyse Emotion</button>
+        <div id="result-box" style="display:none;"></div>
+    </div>
+</div>
+
+<script>
+let selectedFile = null;
+
+function handleFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    selectedFile = file;
+    const url = URL.createObjectURL(file);
+    document.getElementById("audio-element").src = url;
+    document.getElementById("audio-player").style.display = "block";
+    document.getElementById("analyse-btn").style.display = "inline-block";
+    document.getElementById("upload-zone").querySelector(".upload-text").textContent = file.name;
+}
+
+async function analyseAudio() {
+    if (!selectedFile) return;
+    const btn = document.getElementById("analyse-btn");
+    btn.textContent = "Analysing...";
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("audio", selectedFile);
+
+    const res = await fetch("/predict", { method: "POST", body: formData });
+    const r = await res.json();
+
+    btn.textContent = "Analyse Emotion";
+    btn.disabled = false;
+
+    const box = document.getElementById("result-box");
+    if (r.error) {
+        box.className = "result-box result-negative";
+        box.innerHTML = `<div class="result-label">❌ ${r.error}</div>`;
+    } else {
+        box.className = "result-box result-positive";
+        box.innerHTML = `
+            <div class="result-label">${r.emoji} ${r.emotion.charAt(0).toUpperCase() + r.emotion.slice(1)}</div>
+            <div class="result-prob">Confidence: <strong>${r.confidence}%</strong></div>
+            <div class="top3-row">
+                ${r.top3.map(t => `<div class="top3-item"><span>${t.emoji} ${t.emotion}</span><span>${t.prob}%</span></div>`).join("")}
+            </div>
+        `;
+    }
+    box.style.display = "block";
+}
+</script>
+</body>
+</html>

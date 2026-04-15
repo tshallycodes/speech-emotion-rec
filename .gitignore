@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+*.pkl
+*.yml
+dataset/
+uploads/
+known_faces/
